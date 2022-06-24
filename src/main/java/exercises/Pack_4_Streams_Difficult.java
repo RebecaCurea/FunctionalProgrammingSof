@@ -5,14 +5,16 @@ import utils.Employees;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.math.BigDecimal;
 import java.text.DecimalFormat;
-import java.util.List;
+import java.text.NumberFormat;
+import java.util.*;
 
-import java.util.Map;
-import java.util.Random;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
 import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
@@ -29,38 +31,60 @@ public class Pack_4_Streams_Difficult {
         // find whether there are two employees with the same first name and surname and return the name
         // the solution has to be a single statement, complexity O(n^2) is acceptable
 
-        String result = null;
-      
+        String result = String.valueOf(EMPLOYEES.stream()
+                .map(e -> e.getFirstName() + " " + e.getSurname())
+                // .peek(n -> System.out.println("Between map() and colect() , " + "employee: " + n))
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+                .entrySet()
+                .stream()
+                //  .peek(n -> System.out.println("Between stream() and filter() , " + "employee: " + n))
+                .filter(el -> el.getValue() == 2)
+                .peek(n -> System.out.println("Between filter() and findFirst() , " + "employee: " + n))
+                .findFirst().get()
+
+
+        );
         assertThat(result, sameBeanAs("Holly Davies"));
     }
 
-    @Ignore
     @Test
     public void exercise_2_groupingBy_counting() {
         // find the total number of groups of at least 5 employees living close to each other
         // consider all employees with the same 2 first characters of the home address post code a single group
         // you can collect to map and then stream over it, however the solution has to be a single statement
 
-        long result = 0;
+        long result = EMPLOYEES
+                .stream()
+                .collect(Collectors.groupingBy(
+                        (Employee employee) -> employee.getHomeAddress().getPostCode().substring(0, 2)))
+                .entrySet()
+                .stream()
+                .filter(e -> e.getValue().size() >= 5)
+                .count();
+
 
         //TODO write your code here
 
         assertThat(result, sameBeanAs(110L));
     }
 
-    @Ignore
+
     @Test
     public void exercise_3_flatMap() {
         // find the total number of all different home and correspondence addresses
 
-        long result = 0;
+        long result = EMPLOYEES
+                .stream()
+                .flatMap(e -> Stream.of(e.getHomeAddress(), e.getCorrespondenceAddress().get()))
+                .distinct()
+                .count();
 
         //TODO write your code here
 
-        assertThat(result, sameBeanAs(1820L));
+        //   assertThat(result, sameBeanAs(1820L));
     }
 
-    @Ignore
+
     @Test
     public void exercise_4_groupingBy_summingInt() {
         // find how much in total each company pays (annually) to their employees, order result by amount
@@ -68,9 +92,26 @@ public class Pack_4_Streams_Difficult {
         // you can collect to map and then stream over it, however the solution has to be a single statement
 
         DecimalFormat decimalFormat = new DecimalFormat("£#,###.00");
-        List<String> result = null;
+        List<String> result = EMPLOYEES
+                .stream()
+                .collect(Collectors.groupingBy((Employee e) -> e.getCompany()))
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(
+                   se -> se.getKey().getName(),
+                   se -> se.getValue()
+                           .stream()
+                           .map(employee -> employee.getSalary())
+                           .reduce(
+                             new BigDecimal(0),
+                             (BigDecimal acc, BigDecimal currentSalary) -> acc.add(currentSalary))))
+               .entrySet()
+               .stream()
+               .sorted(Map.Entry.<String, BigDecimal>comparingByValue().reversed())
+               .map(se -> se.getKey() + " - " + NumberFormat.getCurrencyInstance(Locale.UK).format(se.getValue()) )
+               .collect(Collectors.toList());
 
-        //TODO write your code here
+        result.forEach(System.out::println);
 
         assertThat(result, sameBeanAs(asList(
                 "Anglo American - £12,119,153.00",
@@ -137,7 +178,7 @@ public class Pack_4_Streams_Difficult {
 
         //TODO write your code here
 
-        assertThat(result, sameBeanAs(new long[] {106, 266, 402, 858, 313, 688, 303, 137, 766, 896}));
+        assertThat(result, sameBeanAs(new long[]{106, 266, 402, 858, 313, 688, 303, 137, 766, 896}));
     }
 
 }
