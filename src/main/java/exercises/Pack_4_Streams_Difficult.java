@@ -138,12 +138,12 @@ public class Pack_4_Streams_Difficult {
 
 
         String string = "dog" + "\n" + "bird" + "\n" + "cat" + "\n" + "cat" + "\n" + "dog" + "\n" + "cat";
-        List<String> result =Pattern.compile("\\s+").splitAsStream(string)
-                . collect(Collectors.groupingBy(e -> e, Collectors.counting()))
+        List<String> result = Pattern.compile("\\s+").splitAsStream(string)
+                .collect(Collectors.groupingBy(e -> e, Collectors.counting()))
                 .entrySet()
                 .stream()
                 .map(e -> e.getKey()+ " - "+ e.getValue())
-                .sorted((k,v) -> k.compareTo(v))
+                .sorted((k, v) -> k.compareTo(v))
                 .collect(Collectors.toList());
         //TODO write your code here
 
@@ -161,14 +161,25 @@ public class Pack_4_Streams_Difficult {
         // calculate the sum of values of all squares
         int[] rows = {6432, 8997, 8500, 7036, 9395, 9372, 9715, 9634};
         int[] columns = {6199, 9519, 6745, 8864, 8788, 7322, 7341, 7395};
-        long result =IntStream.range(0, rows.length).mapToLong(e -> rows[e] * columns[e])
-                .reduce(0,(e1, e2) -> (long)e1 +((long)e2));
+
+        long result = Arrays.stream(rows)
+                .mapToLong(row -> row)
+                .reduce(
+                        0L,
+                        (acc, row) -> acc + Arrays
+                                .stream(columns)
+                                .mapToLong(column -> column)
+                                .reduce(
+                                        0L,
+                                        (acc2, column) -> acc2 + row * column )
+                );
+
         //TODO write your code here
 
-        assertThat(result, sameBeanAs(4294973013L));
+         assertThat(result, sameBeanAs(4294973013L));
     }
 
-    @Ignore
+
     @Test
     public void exercise_7_randomLongs_concat_toArray() {
         // concatenate two random streams of numbers (seed is fixed for testing purposes),
@@ -178,9 +189,17 @@ public class Pack_4_Streams_Difficult {
         // and finally collect the result into an array
         LongStream longs = new Random(0).longs(10);
         IntStream ints = new Random(0).ints(10);
-        int[] result = null;
 
-        //TODO write your code here
+        Integer[] result =
+            LongStream.concat(longs, ints.mapToLong(x -> x))
+                .map(a -> a < 0 ? -a : a)
+                .sorted()
+                .skip(20 / 2 - 5) // how to not hardcode 20, 5, and 10?
+                .limit(10)
+                .map(x -> x % 1000)
+                .mapToInt(x -> (int)x)
+                .boxed()
+                .toArray(Integer[]::new);
 
         assertThat(result, sameBeanAs(new long[]{106, 266, 402, 858, 313, 688, 303, 137, 766, 896}));
     }
