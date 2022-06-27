@@ -11,6 +11,7 @@ import java.text.NumberFormat;
 import java.util.*;
 
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
@@ -127,7 +128,6 @@ public class Pack_4_Streams_Difficult {
         )));
     }
 
-    @Ignore
     @Test
     public void exercise_5_patternCompileSplitAsStream() {
         // count the instances of words and output a list of formatted strings
@@ -136,9 +136,15 @@ public class Pack_4_Streams_Difficult {
         // as always, a single statement solution is expected
         // hint: look at Pattern.compile(regex).splitAsStream(string)
 
-        String string = "dog" + "\n" + "bird" + "\n" + "cat" + "\n" + "cat" + "\n" + "dog" + "\n" + "cat";
-        List<String> result = null;
 
+        String string = "dog" + "\n" + "bird" + "\n" + "cat" + "\n" + "cat" + "\n" + "dog" + "\n" + "cat";
+        List<String> result =Pattern.compile("\\s+").splitAsStream(string)
+                . collect(Collectors.groupingBy(e -> e, Collectors.counting()))
+                .entrySet()
+                .stream()
+                .map(e -> e.getKey()+ " - "+ e.getValue())
+                .sorted((k,v) -> k.compareTo(v))
+                .collect(Collectors.toList());
         //TODO write your code here
 
         assertThat(result, sameBeanAs(asList(
@@ -147,8 +153,6 @@ public class Pack_4_Streams_Difficult {
                 "dog - 2"
         )));
     }
-
-    @Ignore
     @Test
     public void exercise_6_mapToLong() {
         // the rows and columns of the chess board are assigned arbitrary numbers (instead of letters and digits)
@@ -157,8 +161,8 @@ public class Pack_4_Streams_Difficult {
         // calculate the sum of values of all squares
         int[] rows = {6432, 8997, 8500, 7036, 9395, 9372, 9715, 9634};
         int[] columns = {6199, 9519, 6745, 8864, 8788, 7322, 7341, 7395};
-        long result = 0;
-
+        long result =IntStream.range(0, rows.length).mapToLong(e -> rows[e] * columns[e])
+                .reduce(0,(e1, e2) -> (long)e1 +((long)e2));
         //TODO write your code here
 
         assertThat(result, sameBeanAs(4294973013L));
